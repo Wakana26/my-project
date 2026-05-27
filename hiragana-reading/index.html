@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ひらがな 読み練習 | Hiragana Reading Practice</title>
+  <link href="https://fonts.googleapis.com/css2?family=Klee+One:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:        #f0f4f8;
+      --card:      #ffffff;
+      --primary:   #4f46e5;
+      --pri-dark:  #3730a3;
+      --pri-light: #818cf8;
+      --green:     #059669;
+      --green-bg:  #d1fae5;
+      --word-col:  #1e293b;
+      --read-col:  #4338ca;
+      --mean-col:  #047857;
+      --text:      #334155;
+      --muted:     #64748b;
+      --border:    #e2e8f0;
+      --shadow:    0 4px 24px rgba(79,70,229,.1);
+      --r:         16px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Klee One', 'UD デジタル 教科書体 NK-R', 'Hiragino Maru Gothic ProN', sans-serif;
+      background: var(--bg);
+      min-height: 100vh;
+      color: var(--text);
+    }
+
+    /* ── Header ── */
+    .app-header {
+      background: linear-gradient(135deg, var(--pri-dark), var(--primary));
+      color: white;
+      text-align: center;
+      padding: 22px 20px 18px;
+    }
+    .app-header h1 { font-size: 1.7rem; letter-spacing: 3px; }
+    .app-header p  { font-size: .8rem; opacity: .7; margin-top: 3px; letter-spacing: 1px; }
+
+    /* ── Screens ── */
+    .screen { display: none; }
+    .screen.active { display: block; }
+
+    /* ═══════════════════ SETUP ═══════════════════ */
+    #setup {
+      max-width: 580px;
+      margin: 0 auto;
+      padding: 28px 16px;
+    }
+
+    .card-section {
+      background: var(--card);
+      border-radius: var(--r);
+      padding: 24px;
+      margin-bottom: 16px;
+      box-shadow: var(--shadow);
+    }
+    .card-section h2 {
+      font-size: .8rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      margin-bottom: 18px;
+    }
+
+    /* Row stepper */
+    .stepper {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 18px;
+    }
+    .step-btn {
+      width: 46px; height: 46px;
+      border-radius: 50%;
+      border: 2px solid var(--primary);
+      background: white;
+      color: var(--primary);
+      font-size: 1.4rem;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: .15s;
+      flex-shrink: 0;
+    }
+    .step-btn:hover:not(:disabled) { background: var(--primary); color: white; }
+    .step-btn:disabled { border-color: var(--border); color: var(--border); cursor: not-allowed; }
+
+    .step-info { flex: 1; text-align: center; }
+    .step-main { font-size: 1.25rem; font-weight: 700; color: var(--word-col); }
+    .step-sub  { font-size: .8rem; color: var(--muted); margin-top: 2px; }
+
+    /* Chips */
+    .chips { display: flex; flex-wrap: wrap; gap: 7px; }
+    .chip {
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: .85rem;
+      font-weight: 600;
+      border: 2px solid var(--border);
+      color: var(--muted);
+      background: white;
+      transition: .15s;
+      cursor: pointer;
+      user-select: none;
+    }
+    .chip:hover:not(.on) { border-color: var(--primary); color: var(--primary); }
+    .chip.on {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: white;
+    }
+    .chip-divider {
+      width: 100%;
+      font-size: .7rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      margin: 10px 0 2px;
+      padding-top: 10px;
+      border-top: 1px solid var(--border);
+    }
+    .selected-info {
+      margin-top: 12px;
+      font-size: .85rem;
+      color: var(--muted);
+    }
+
+    /* Word count badge */
+    .word-badge {
+      text-align: center;
+      padding: 14px;
+      background: var(--green-bg);
+      border-radius: 12px;
+      color: var(--green);
+      font-weight: 700;
+      font-size: 1rem;
+    }
+    .word-badge span { font-size: 1.9rem; vertical-align: middle; }
+
+    /* Toggle */
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 14px;
+    }
+    .toggle-label { font-size: .95rem; color: var(--text); }
+    .sw { position: relative; width: 46px; height: 25px; }
+    .sw input { opacity: 0; width: 0; height: 0; }
+    .sw-slider {
+      position: absolute; inset: 0;
+      background: var(--border);
+      border-radius: 13px;
+      cursor: pointer;
+      transition: .2s;
+    }
+    .sw-slider::before {
+      content: '';
+      position: absolute;
+      width: 19px; height: 19px;
+      left: 3px; top: 3px;
+      background: white;
+      border-radius: 50%;
+      transition: .2s;
+    }
+    .sw input:checked + .sw-slider { background: var(--primary); }
+    .sw input:checked + .sw-slider::before { transform: translateX(21px); }
+
+    /* Start button */
+    .start-btn {
+      width: 100%;
+      padding: 17px;
+      background: linear-gradient(135deg, var(--pri-dark), var(--primary));
+      color: white;
+      border: none;
+      border-radius: var(--r);
+      font-size: 1.1rem;
+      font-weight: 700;
+      cursor: pointer;
+      letter-spacing: .5px;
+      box-shadow: 0 6px 20px rgba(79,70,229,.35);
+      transition: transform .15s, box-shadow .15s;
+    }
+    .start-btn:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 28px rgba(79,70,229,.45);
+    }
+    .start-btn:disabled {
+      opacity: .35; cursor: not-allowed;
+      transform: none; box-shadow: none;
+    }
+
+    /* ═══════════════════ PRACTICE ═══════════════════ */
+    #practice {
+      max-width: 660px;
+      margin: 0 auto;
+      padding: 20px 16px;
+    }
+
+    .prac-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+    .back-btn {
+      background: none;
+      border: none;
+      color: var(--primary);
+      font-size: .9rem;
+      font-weight: 600;
+      cursor: pointer;
+      padding: 4px 0;
+    }
+    .back-btn:hover { text-decoration: underline; }
+
+    .prog-text { color: var(--muted); font-size: .95rem; }
+    .prog-text strong { color: var(--primary); font-size: 1.05rem; }
+
+    .rows-badge {
+      font-size: .8rem;
+      color: var(--muted);
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 3px 10px;
+    }
+
+    .prog-bar {
+      height: 4px;
+      background: var(--border);
+      border-radius: 2px;
+      margin-bottom: 24px;
+      overflow: hidden;
+    }
+    .prog-fill {
+      height: 100%;
+      background: var(--primary);
+      border-radius: 2px;
+      transition: width .35s ease;
+    }
+
+    /* Flash card */
+    .flash-card {
+      background: white;
+      border-radius: 24px;
+      box-shadow: 0 8px 32px rgba(0,0,0,.09);
+      padding: 52px 40px 44px;
+      text-align: center;
+      height: 360px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+
+    .word-display {
+      font-size: clamp(3.5rem, 10vw, 6rem);
+      color: var(--word-col);
+      letter-spacing: 10px;
+      line-height: 1.15;
+      margin-bottom: 24px;
+      user-select: none;
+    }
+
+    .answer-wrap {
+      overflow: hidden;
+      transition: max-height .4s ease, opacity .3s ease;
+      max-height: 0;
+      opacity: 0;
+    }
+    .answer-wrap.open {
+      max-height: 160px;
+      opacity: 1;
+    }
+
+    .reading-display {
+      font-size: 1.7rem;
+      color: var(--read-col);
+      font-weight: 600;
+      letter-spacing: 2px;
+      margin-bottom: 12px;
+    }
+
+    .meaning-display {
+      display: inline-block;
+      font-size: 1.2rem;
+      color: var(--mean-col);
+      font-weight: 500;
+      background: var(--green-bg);
+      border-radius: 12px;
+      padding: 9px 22px;
+    }
+
+    /* Controls */
+    .controls {
+      display: flex;
+      gap: 10px;
+      align-items: stretch;
+    }
+
+    .nav-btn {
+      padding: 14px 16px;
+      border: 2px solid var(--border);
+      background: white;
+      border-radius: 12px;
+      font-size: .9rem;
+      color: var(--muted);
+      cursor: pointer;
+      transition: .15s;
+      min-width: 76px;
+      white-space: nowrap;
+    }
+    .nav-btn:hover:not(:disabled) { border-color: var(--primary); color: var(--primary); }
+    .nav-btn:disabled { opacity: .3; cursor: not-allowed; }
+
+    .main-btn {
+      padding: 16px 20px;
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background .15s;
+      letter-spacing: .3px;
+    }
+    .main-btn:hover { background: var(--pri-dark); }
+    .main-btn.revealed { background: var(--green); }
+    .main-btn.revealed:hover { background: #047857; }
+
+    .main-action { margin-bottom: 10px; }
+    .main-action .main-btn { width: 100%; }
+
+    .kbd-hint {
+      text-align: center;
+      color: var(--muted);
+      font-size: .78rem;
+      margin-top: 14px;
+    }
+    kbd {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 1px 5px;
+      font-size: .72rem;
+      font-family: monospace;
+    }
+    rt { font-size: .55em; line-height: 1.3; }
+
+    /* ═══════════════════ COMPLETE ═══════════════════ */
+    #complete {
+      max-width: 420px;
+      margin: 60px auto;
+      padding: 20px;
+      text-align: center;
+    }
+    .complete-card {
+      background: white;
+      border-radius: 24px;
+      padding: 48px 36px;
+      box-shadow: var(--shadow);
+    }
+    .complete-emoji { font-size: 3.5rem; margin-bottom: 14px; }
+    .complete-card h2 { font-size: 1.6rem; color: var(--word-col); margin-bottom: 6px; }
+    .complete-card p  { color: var(--muted); margin-bottom: 28px; }
+    .btn-stack { display: flex; flex-direction: column; gap: 10px; }
+    .btn-pri {
+      padding: 14px;
+      background: var(--primary);
+      color: white; border: none;
+      border-radius: 12px;
+      font-size: 1rem; font-weight: 600;
+      cursor: pointer; transition: .15s;
+    }
+    .btn-pri:hover { background: var(--pri-dark); }
+    .btn-sec {
+      padding: 14px;
+      background: white; color: var(--text);
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      font-size: 1rem; font-weight: 600;
+      cursor: pointer; transition: .15s;
+    }
+    .btn-sec:hover { border-color: var(--primary); color: var(--primary); }
+
+    @media (max-width: 480px) {
+      .flash-card { padding: 36px 20px 32px; height: 300px; }
+      .controls { flex-wrap: wrap; }
+      .nav-btn { min-width: 60px; padding: 12px 10px; font-size: .8rem; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="app-header">
+  <h1>ひらがな <ruby>読<rt>よ</rt></ruby>み<ruby>練習<rt>れんしゅう</rt></ruby></h1>
+  <p>Hiragana Reading Practice</p>
+</div>
+
+<!-- ──────────── SETUP ──────────── -->
+<div id="setup" class="screen active">
+
+  <div class="card-section">
+    <h2><ruby>学習<rt>がくしゅう</rt></ruby><ruby>済<rt>ず</rt></ruby>みの<ruby>行<rt>ぎょう</rt></ruby>を<ruby>選<rt>えら</rt></ruby>んでください</h2>
+    <div class="chips" id="chips"></div>
+    <div class="selected-info" id="selected-info"><ruby>行<rt>ぎょう</rt></ruby>をクリックして<ruby>選択<rt>せんたく</rt></ruby>してください</div>
+  </div>
+
+  <div class="card-section">
+    <div class="word-badge">
+      <ruby>利用<rt>りよう</rt></ruby>できる<ruby>単語<rt>たんご</rt></ruby>：<span id="word-count">0</span> <ruby>語<rt>ご</rt></ruby>
+    </div>
+    <div class="toggle-row">
+      <span class="toggle-label">🔀 シャッフル</span>
+      <label class="sw">
+        <input type="checkbox" id="shuffle">
+        <span class="sw-slider"></span>
+      </label>
+    </div>
+  </div>
+
+  <div class="card-section">
+    <h2><ruby>問題数<rt>もんだいすう</rt></ruby></h2>
+    <div class="stepper">
+      <button class="step-btn" id="prob-minus" onclick="changeProbs(-1)" disabled aria-label="問題数を減らす">−</button>
+      <div class="step-info">
+        <div class="step-main" id="prob-label"><ruby>全<rt>すべ</rt></ruby>て</div>
+        <div class="step-sub"  id="prob-sub"><ruby>行<rt>ぎょう</rt></ruby>を<ruby>選<rt>えら</rt></ruby>ぶと<ruby>設定<rt>せってい</rt></ruby>できます</div>
+      </div>
+      <button class="step-btn" id="prob-plus" onclick="changeProbs(1)" disabled aria-label="問題数を増やす">＋</button>
+    </div>
+  </div>
+
+  <button class="start-btn" id="start-btn" disabled onclick="startPractice()">
+    <ruby>練習<rt>れんしゅう</rt></ruby>を<ruby>始<rt>はじ</rt></ruby>める →
+  </button>
+</div>
+
+<!-- ──────────── PRACTICE ──────────── -->
+<div id="practice" class="screen">
+
+  <div class="prac-header">
+    <button class="back-btn" onclick="goSetup()">← <ruby>設定<rt>せってい</rt></ruby></button>
+    <div class="prog-text">
+      <strong id="p-cur">1</strong> / <span id="p-tot">0</span>
+    </div>
+    <div class="rows-badge" id="rows-badge"></div>
+  </div>
+
+  <div class="prog-bar">
+    <div class="prog-fill" id="prog-fill" style="width:0%"></div>
+  </div>
+
+  <div class="flash-card">
+    <div class="word-display" id="word-disp"></div>
+    <div class="answer-wrap" id="answer-wrap">
+      <div class="reading-display" id="read-disp"></div>
+      <div class="meaning-display" id="mean-disp"></div>
+    </div>
+  </div>
+
+  <div class="main-action">
+    <button class="main-btn" id="main-btn" onclick="doMain()"><ruby>答<rt>こた</rt></ruby>えを<ruby>見<rt>み</rt></ruby>る</button>
+  </div>
+  <div class="controls">
+    <button class="nav-btn" id="prev-btn" onclick="go(-1)" disabled>← <ruby>前<rt>まえ</rt></ruby>へ</button>
+    <button class="nav-btn" id="skip-btn" onclick="go(1)">スキップ →</button>
+  </div>
+
+  <div class="kbd-hint">
+    <kbd>Space</kbd> <ruby>答<rt>こた</rt></ruby>えを<ruby>見<rt>み</rt></ruby>る / <ruby>次<rt>つぎ</rt></ruby>へ &nbsp;
+    <kbd>←</kbd> <kbd>→</kbd> <ruby>前後<rt>ぜんご</rt></ruby>に<ruby>移動<rt>いどう</rt></ruby>
+  </div>
+</div>
+
+<!-- ──────────── COMPLETE ──────────── -->
+<div id="complete" class="screen">
+  <div class="complete-card">
+    <div class="complete-emoji">🎉</div>
+    <h2>お<ruby>疲<rt>つか</rt></ruby>れさまでした！</h2>
+    <p><ruby>全<rt>すべ</rt></ruby>ての<ruby>単語<rt>たんご</rt></ruby>を<ruby>確認<rt>かくにん</rt></ruby>しました</p>
+    <div class="btn-stack">
+      <button class="btn-pri" onclick="restart()">🔄 もう<ruby>一度<rt>いちど</rt></ruby></button>
+      <button class="btn-sec" onclick="goSetup()">← <ruby>設定<rt>せってい</rt></ruby>に<ruby>戻<rt>もど</rt></ruby>る</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Row definitions ──
+const ROWS = [
+  { name: "あ行",  chars: "あいうえお" },
+  { name: "か行",  chars: "かきくけこ" },
+  { name: "さ行",  chars: "さしすせそ" },
+  { name: "た行",  chars: "たちつてと" },
+  { name: "な行",  chars: "なにぬねの" },
+  { name: "は行",  chars: "はひふへほ" },
+  { name: "ま行",  chars: "まみむめも" },
+  { name: "や行",  chars: "やゆよ" },
+  { name: "ら行",  chars: "らりるれろ" },
+  { name: "わ・ん", chars: "わをん" },
+  // 濁音・半濁音・促音
+  { name: "が行",  chars: "がぎぐげご" },
+  { name: "ざ行",  chars: "ざじずぜぞ" },
+  { name: "だ行",  chars: "だぢづでど" },
+  { name: "ば行",  chars: "ばびぶべぼ" },
+  { name: "ぱ行",  chars: "ぱぴぷぺぽ" },
+  { name: "促音",  chars: "っ" },
+];
+const DAKUTEN_START = 10; // index where 濁音 group starts
+
+// ── Character → row index (1-based) ──
+const ROW_MAP = {};
+[
+  "あいうえお",   // 1: あ行
+  "かきくけこ",   // 2: か行
+  "さしすせそ",   // 3: さ行
+  "たちつてと",   // 4: た行
+  "なにぬねの",   // 5: な行
+  "はひふへほ",   // 6: は行
+  "まみむめも",   // 7: ま行
+  "やゆよゃゅょ", // 8: や行
+  "らりるれろ",   // 9: ら行
+  "わをん",       // 10: わ行・ん
+  "がぎぐげご",   // 11: が行
+  "ざじずぜぞ",   // 12: ざ行
+  "だぢづでど",   // 13: だ行
+  "ばびぶべぼ",   // 14: ば行
+  "ぱぴぷぺぽ",   // 15: ぱ行
+  "っ",           // 16: 促音
+].forEach((g, i) => { for (const c of g) ROW_MAP[c] = i + 1; });
+
+// ── Word database (nouns only) ──
+const ALL_WORDS = [
+  // あ行 only
+  { word: "あお",       reading: "ao",         meaning: "blue" },
+  { word: "あい",       reading: "ai",         meaning: "love" },
+  { word: "うえ",       reading: "ue",         meaning: "above / on top" },
+  { word: "いえ",       reading: "ie",         meaning: "house / home" },
+  // か行
+  { word: "かぎ",       reading: "kagi",       meaning: "key" },
+  { word: "えき",       reading: "eki",        meaning: "train station" },
+  { word: "かお",       reading: "kao",        meaning: "face" },
+  { word: "こえ",       reading: "koe",        meaning: "voice" },
+  { word: "いけ",       reading: "ike",        meaning: "pond" },
+  { word: "くうき",     reading: "kuuki",      meaning: "air" },
+  { word: "えいが",     reading: "eiga",       meaning: "movie / film" },
+  { word: "かいぎ",     reading: "kaigi",      meaning: "meeting / conference" },
+  // さ行
+  { word: "すし",       reading: "sushi",      meaning: "sushi" },
+  { word: "いす",       reading: "isu",        meaning: "chair" },
+  { word: "あさ",       reading: "asa",        meaning: "morning" },
+  { word: "しお",       reading: "shio",       meaning: "salt" },
+  { word: "うそ",       reading: "uso",        meaning: "lie" },
+  { word: "あじ",       reading: "aji",        meaning: "taste / flavor" },
+  { word: "さけ",       reading: "sake",       meaning: "sake / alcohol" },
+  { word: "かさ",       reading: "kasa",       meaning: "umbrella" },
+  { word: "かぜ",       reading: "kaze",       meaning: "wind / a cold" },
+  { word: "おかし",     reading: "okashi",     meaning: "sweets / snacks" },
+  { word: "うさぎ",     reading: "usagi",      meaning: "rabbit" },
+  // た行
+  { word: "うた",       reading: "uta",        meaning: "song" },
+  { word: "くつ",       reading: "kutsu",      meaning: "shoes" },
+  { word: "たこ",       reading: "tako",       meaning: "octopus" },
+  { word: "きって",     reading: "kitte",      meaning: "postage stamp" },
+  { word: "そと",       reading: "soto",       meaning: "outside" },
+  { word: "ちず",       reading: "chizu",      meaning: "map" },
+  { word: "こたえ",     reading: "kotae",      meaning: "answer" },
+  { word: "あした",     reading: "ashita",     meaning: "tomorrow" },
+  { word: "しごと",     reading: "shigoto",    meaning: "work / job" },
+  { word: "ちかてつ",   reading: "chikatetsu", meaning: "subway / metro" },
+  // な行
+  { word: "いぬ",       reading: "inu",        meaning: "dog" },
+  { word: "うに",       reading: "uni",        meaning: "sea urchin" },
+  { word: "にく",       reading: "niku",       meaning: "meat" },
+  { word: "なか",       reading: "naka",       meaning: "inside / middle" },
+  { word: "ねこ",       reading: "neko",       meaning: "cat" },
+  { word: "さかな",     reading: "sakana",     meaning: "fish" },
+  // は行
+  { word: "はは",       reading: "haha",       meaning: "mother (one's own)" },
+  { word: "はこ",       reading: "hako",       meaning: "box" },
+  { word: "ほし",       reading: "hoshi",      meaning: "star" },
+  { word: "ふた",       reading: "futa",       meaning: "lid" },
+  { word: "はし",       reading: "hashi",      meaning: "chopsticks / bridge" },
+  { word: "そば",       reading: "soba",       meaning: "soba noodles" },
+  { word: "ひと",       reading: "hito",       meaning: "person" },
+  { word: "ふね",       reading: "fune",       meaning: "boat / ship" },
+  { word: "はな",       reading: "hana",       meaning: "flower / nose" },
+  // ま行
+  { word: "うみ",       reading: "umi",        meaning: "sea / ocean" },
+  { word: "かみ",       reading: "kami",       meaning: "paper / hair / god" },
+  { word: "くも",       reading: "kumo",       meaning: "cloud / spider" },
+  { word: "ごみ",       reading: "gomi",       meaning: "garbage / trash" },
+  { word: "むし",       reading: "mushi",      meaning: "insect / bug" },
+  { word: "まち",       reading: "machi",      meaning: "town / city" },
+  { word: "てがみ",     reading: "tegami",     meaning: "written letter" },
+  // や行
+  { word: "ゆき",       reading: "yuki",       meaning: "snow" },
+  { word: "やま",       reading: "yama",       meaning: "mountain" },
+  { word: "やさい",     reading: "yasai",      meaning: "vegetable" },
+  // ら行
+  { word: "そら",       reading: "sora",       meaning: "sky" },
+  { word: "てら",       reading: "tera",       meaning: "temple" },
+  { word: "さくら",     reading: "sakura",     meaning: "cherry blossom" },
+  { word: "くるま",     reading: "kuruma",     meaning: "car" },
+  { word: "もり",       reading: "mori",       meaning: "forest" },
+  { word: "よる",       reading: "yoru",       meaning: "night / evening" },
+  { word: "おにぎり",   reading: "onigiri",    meaning: "rice ball" },
+  // わ・ん
+  { word: "でんわ",     reading: "denwa",      meaning: "telephone" },
+  { word: "にほん",     reading: "nihon",      meaning: "Japan" },
+  { word: "さんぽ",     reading: "sanpo",      meaning: "a walk / stroll" },
+  { word: "ほん",       reading: "hon",        meaning: "book" },
+  { word: "かばん",     reading: "kaban",      meaning: "bag" },
+  // ざ行・促音
+  { word: "ざっし",     reading: "zasshi",     meaning: "magazine" },
+];
+
+// Precompute required rows for each word
+ALL_WORDS.forEach(w => {
+  const s = new Set();
+  for (const c of w.word) { if (ROW_MAP[c]) s.add(ROW_MAP[c]); }
+  w.rows = s;
+});
+
+// ── State ──
+let learnedRows = new Set(); // 選択中の行番号 (1-based)
+let probCount   = 0;         // 0 = 全て
+let deck = [];
+let idx  = 0;
+let open = false;
+
+// ── Setup UI ──
+(function initChips() {
+  const el = document.getElementById('chips');
+  ROWS.forEach((r, i) => {
+    if (i === DAKUTEN_START) {
+      const div = document.createElement('div');
+      div.className = 'chip-divider';
+      div.innerHTML = '<ruby>濁音<rt>だくおん</rt></ruby> / <ruby>半濁音<rt>はんだくおん</rt></ruby> / <ruby>促音<rt>そくおん</rt></ruby>';
+      el.appendChild(div);
+    }
+    const d = document.createElement('div');
+    d.className = 'chip';
+    d.id = `chip-${i}`;
+    d.innerHTML = r.name
+      .replace('行', '<ruby>行<rt>ぎょう</rt></ruby>')
+      .replace('促音', '<ruby>促音<rt>そくおん</rt></ruby>');
+    d.onclick = () => toggleRow(i + 1);
+    el.appendChild(d);
+  });
+})();
+
+function toggleRow(rowNum) {
+  if (learnedRows.has(rowNum)) learnedRows.delete(rowNum);
+  else learnedRows.add(rowNum);
+  refreshSetup();
+}
+
+function rowLabel() {
+  if (learnedRows.size === 0) return '';
+  const toHtml = name => name
+    .replace('行', '<ruby>行<rt>ぎょう</rt></ruby>')
+    .replace('促音', '<ruby>促音<rt>そくおん</rt></ruby>');
+  const names = ROWS.filter((_, i) => learnedRows.has(i + 1)).map(r => toHtml(r.name));
+  if (names.length <= 4) return names.join('・');
+  return names.slice(0, 4).join('・') + '…';
+}
+
+function countAvailable() {
+  return ALL_WORDS.filter(w => isAvailable(w, learnedRows)).length;
+}
+
+function refreshSetup() {
+  ROWS.forEach((_, i) => {
+    document.getElementById(`chip-${i}`).classList.toggle('on', learnedRows.has(i + 1));
+  });
+
+  const n = learnedRows.size;
+  document.getElementById('selected-info').innerHTML =
+    n === 0
+      ? '<ruby>行<rt>ぎょう</rt></ruby>をクリックして<ruby>選択<rt>せんたく</rt></ruby>してください'
+      : `${n} <ruby>行<rt>ぎょう</rt></ruby>を<ruby>選択<rt>せんたく</rt></ruby><ruby>中<rt>ちゅう</rt></ruby>`;
+
+  const avail = countAvailable();
+  document.getElementById('word-count').textContent = avail;
+  document.getElementById('start-btn').disabled = avail === 0;
+  refreshProbs(avail);
+}
+
+function refreshProbs(avail) {
+  if (avail === undefined) avail = countAvailable();
+  const lbl = document.getElementById('prob-label');
+  const sub = document.getElementById('prob-sub');
+  const mn  = document.getElementById('prob-minus');
+  const pl  = document.getElementById('prob-plus');
+
+  if (avail === 0) {
+    lbl.innerHTML = '<ruby>全<rt>すべ</rt></ruby>て';
+    sub.innerHTML = '<ruby>行<rt>ぎょう</rt></ruby>を<ruby>選<rt>えら</rt></ruby>ぶと<ruby>設定<rt>せってい</rt></ruby>できます';
+    mn.disabled = pl.disabled = true;
+    return;
+  }
+  if (probCount === 0 || probCount >= avail) probCount = 0;
+  if (probCount === 0) {
+    lbl.innerHTML = '<ruby>全<rt>すべ</rt></ruby>て';
+    sub.innerHTML = `${avail} <ruby>問<rt>もん</rt></ruby>すべて<ruby>出題<rt>しゅつだい</rt></ruby>`;
+    mn.disabled = avail <= 1;
+    pl.disabled = true;
+  } else {
+    lbl.innerHTML = `${probCount} <ruby>問<rt>もん</rt></ruby>`;
+    sub.innerHTML = `${avail} <ruby>問<rt>もん</rt></ruby>中 ${probCount} <ruby>問<rt>もん</rt></ruby>を<ruby>出題<rt>しゅつだい</rt></ruby>`;
+    mn.disabled = probCount <= 1;
+    pl.disabled = probCount >= avail;
+  }
+}
+
+function changeProbs(d) {
+  const avail = countAvailable();
+  if (avail === 0) return;
+  const current = probCount === 0 ? avail : probCount;
+  const next = current + d;
+  probCount = (next >= avail) ? 0 : Math.max(1, next);
+  refreshProbs(avail);
+}
+
+function isAvailable(w, learned) {
+  for (const r of w.rows) { if (!learned.has(r)) return false; }
+  return true;
+}
+
+// ── Practice ──
+function startPractice() {
+  deck = ALL_WORDS.filter(w => isAvailable(w, learnedRows));
+  if (document.getElementById('shuffle').checked) {
+    deck = [...deck].sort(() => Math.random() - .5);
+  }
+  if (probCount > 0 && probCount < deck.length) {
+    deck = deck.slice(0, probCount);
+  }
+  idx  = 0;
+  open = false;
+  document.getElementById('rows-badge').innerHTML = rowLabel();
+  document.getElementById('p-tot').textContent = deck.length;
+  show('practice');
+  render();
+}
+
+function render() {
+  const w = deck[idx];
+  document.getElementById('word-disp').textContent = w.word;
+  document.getElementById('read-disp').textContent = w.reading;
+  document.getElementById('mean-disp').textContent = w.meaning;
+
+  const aw = document.getElementById('answer-wrap');
+  aw.classList.toggle('open', open);
+
+  const mb = document.getElementById('main-btn');
+  if (open) {
+    mb.innerHTML = '<ruby>次<rt>つぎ</rt></ruby>の<ruby>単語<rt>たんご</rt></ruby> →';
+    mb.className = 'main-btn revealed';
+  } else {
+    mb.innerHTML = '<ruby>答<rt>こた</rt></ruby>えを<ruby>見<rt>み</rt></ruby>る';
+    mb.className = 'main-btn';
+  }
+
+  document.getElementById('p-cur').textContent = idx + 1;
+  const pct = ((idx + (open ? 1 : 0)) / deck.length) * 100;
+  document.getElementById('prog-fill').style.width = pct + '%';
+
+  document.getElementById('prev-btn').disabled = idx === 0;
+  document.getElementById('skip-btn').disabled = idx === deck.length - 1 && !open;
+}
+
+function doMain() {
+  if (!open) {
+    open = true;
+    render();
+  } else {
+    go(1);
+  }
+}
+
+function go(dir) {
+  const next = idx + dir;
+  if (next < 0) return;
+  if (next >= deck.length) { show('complete'); return; }
+  idx  = next;
+  open = false;
+  render();
+}
+
+function restart() {
+  if (document.getElementById('shuffle').checked) {
+    deck = [...deck].sort(() => Math.random() - .5);
+  }
+  idx  = 0;
+  open = false;
+  show('practice');
+  render();
+}
+
+function goSetup() { show('setup'); }
+
+function show(name) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(name).classList.add('active');
+}
+
+// ── Keyboard ──
+document.addEventListener('keydown', e => {
+  if (!document.getElementById('practice').classList.contains('active')) return;
+  if (e.code === 'Space')       { e.preventDefault(); doMain(); }
+  else if (e.code === 'ArrowRight') { go(1); }
+  else if (e.code === 'ArrowLeft')  { go(-1); }
+});
+
+refreshSetup();
+</script>
+</body>
+</html>
