@@ -336,7 +336,6 @@
     .main-btn.revealed { background: var(--green); }
     .main-btn.revealed:hover { background: #047857; }
 
-    /* Controls */
     .main-action { margin-bottom: 10px; }
     .main-action .main-btn { width: 100%; }
 
@@ -431,12 +430,12 @@
   <div class="card-section">
     <h2><ruby>問題数<rt>もんだいすう</rt></ruby></h2>
     <div class="stepper">
-      <button class="step-btn" id="prob-minus" onclick="changeProbs(-1)" disabled>−</button>
+      <button class="step-btn" id="prob-minus" onclick="changeProbs(-1)" disabled aria-label="問題数を減らす">−</button>
       <div class="step-info">
         <div class="step-main" id="prob-label"><ruby>全<rt>すべ</rt></ruby>て</div>
         <div class="step-sub"  id="prob-sub"><ruby>行<rt>ぎょう</rt></ruby>を<ruby>選<rt>えら</rt></ruby>ぶと<ruby>設定<rt>せってい</rt></ruby>できます</div>
       </div>
-      <button class="step-btn" id="prob-plus" onclick="changeProbs(1)" disabled>＋</button>
+      <button class="step-btn" id="prob-plus" onclick="changeProbs(1)" disabled aria-label="問題数を増やす">＋</button>
     </div>
   </div>
 
@@ -574,7 +573,6 @@ const ALL_WORDS = [
   { word: "きって",     reading: "kitte",      meaning: "postage stamp" },
   { word: "そと",       reading: "soto",       meaning: "outside" },
   { word: "ちず",       reading: "chizu",      meaning: "map" },
-  { word: "ざっし",     reading: "zasshi",     meaning: "magazine" },
   { word: "こたえ",     reading: "kotae",      meaning: "answer" },
   { word: "あした",     reading: "ashita",     meaning: "tomorrow" },
   { word: "しごと",     reading: "shigoto",    meaning: "work / job" },
@@ -622,6 +620,8 @@ const ALL_WORDS = [
   { word: "さんぽ",     reading: "sanpo",      meaning: "a walk / stroll" },
   { word: "ほん",       reading: "hon",        meaning: "book" },
   { word: "かばん",     reading: "kaban",      meaning: "bag" },
+  // ざ行・促音
+  { word: "ざっし",     reading: "zasshi",     meaning: "magazine" },
 ];
 
 // Precompute required rows for each word
