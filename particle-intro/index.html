@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Particle Guide | 助詞ガイド</title>
+  <link href="https://fonts.googleapis.com/css2?family=Klee+One:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:      #f5f4fb;
+      --card:    #ffffff;
+      --text:    #1e293b;
+      --muted:   #64748b;
+      --border:  #e2e8f0;
+      --shadow:  0 4px 24px rgba(0,0,0,.08);
+      --r:       18px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Klee One', 'UD デジタル 教科書体 NK-R', 'Hiragino Maru Gothic ProN', sans-serif;
+      background: var(--bg);
+      min-height: 100vh;
+      color: var(--text);
+    }
+
+    /* ── Header ── */
+    .app-header {
+      background: #1e293b;
+      color: white; text-align: center; padding: 18px 20px;
+      display: flex; align-items: center; justify-content: center; gap: 12px;
+    }
+    .app-header h1 { font-size: 1.25rem; letter-spacing: 2px; }
+    .app-header .sub { font-size: .8rem; opacity: .6; letter-spacing: 1px; }
+
+    /* ── Particle nav strip ── */
+    .particle-nav {
+      display: flex; flex-wrap: wrap; gap: 6px;
+      justify-content: center;
+      padding: 14px 16px;
+      background: white;
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-chip {
+      padding: 5px 13px; border-radius: 20px;
+      font-size: 1rem; font-weight: 700;
+      border: 2px solid transparent;
+      cursor: pointer; transition: .15s; user-select: none;
+      color: white; opacity: .55;
+    }
+    .nav-chip:hover { opacity: .85; transform: scale(1.08); }
+    .nav-chip.active { opacity: 1; box-shadow: 0 2px 10px rgba(0,0,0,.2); }
+
+    /* ── Slide area ── */
+    #slide-area {
+      max-width: 780px; margin: 0 auto; padding: 24px 16px 8px;
+    }
+
+    /* Particle title card */
+    .particle-title-card {
+      background: var(--card);
+      border-radius: var(--r);
+      box-shadow: var(--shadow);
+      padding: 28px 32px;
+      display: flex; align-items: center; gap: 28px;
+      margin-bottom: 16px;
+    }
+    .particle-char-wrap {
+      width: 110px; height: 110px; flex-shrink: 0;
+      border-radius: 20px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .particle-char-big {
+      font-size: 4.5rem; font-weight: 700; line-height: 1;
+      color: white;
+    }
+    .particle-info { flex: 1; }
+    .particle-label {
+      font-size: .75rem; letter-spacing: 2px;
+      text-transform: uppercase; color: var(--muted);
+      margin-bottom: 4px;
+    }
+    .particle-name {
+      font-size: 1.6rem; font-weight: 700;
+      color: var(--text); margin-bottom: 6px;
+    }
+    .particle-romaji {
+      font-size: .9rem; color: var(--muted); margin-bottom: 8px;
+    }
+    .particle-desc {
+      font-size: 1rem; color: #334155; line-height: 1.6;
+    }
+
+    /* Use section (for particles with multiple uses) */
+    .use-section { margin-bottom: 14px; }
+    .use-label {
+      font-size: .75rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 2px;
+      color: var(--muted); padding: 0 4px;
+      margin-bottom: 8px;
+    }
+
+    /* Example cards */
+    .examples-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 12px;
+    }
+    .examples-grid.horizontal {
+      grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+    }
+    .example-card {
+      background: var(--card);
+      border-radius: 14px;
+      padding: 18px 20px;
+      box-shadow: var(--shadow);
+      border-left: 5px solid transparent;
+    }
+    .ex-num {
+      font-size: .72rem; text-transform: uppercase;
+      letter-spacing: 1.5px; color: var(--muted);
+      margin-bottom: 10px;
+    }
+    .grammar-rows { margin-bottom: 14px; }
+    .grammar-row {
+      display: flex; align-items: baseline;
+      gap: 10px; margin-bottom: 5px;
+    }
+    .g-label {
+      font-size: .78rem; color: var(--muted);
+      min-width: 90px; flex-shrink: 0;
+    }
+    .g-jp   { font-size: 1.1rem; color: var(--text); }
+    .g-en   { font-size: .82rem; color: var(--muted); }
+
+    /* Sentence — hidden until revealed */
+    .sentence-line {
+      overflow: hidden;
+      max-height: 0; opacity: 0;
+      transition: max-height .35s ease, opacity .3s ease, padding .3s;
+    }
+    .sentence-line.visible {
+      max-height: 120px; opacity: 1;
+      padding-top: 12px;
+      border-top: 1px solid var(--border);
+    }
+    .sent-jp {
+      font-size: 1.25rem; line-height: 1.5;
+      margin-bottom: 4px;
+    }
+    .p-highlight { font-weight: 700; }
+    .sent-en { font-size: .88rem; color: var(--muted); }
+
+    /* Reveal button */
+    .reveal-btn {
+      margin-top: 12px;
+      padding: 5px 16px;
+      border-radius: 20px;
+      border: 2px solid;
+      background: transparent;
+      font-size: .82rem; font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      transition: background .15s, color .15s;
+      display: block;
+    }
+    .reveal-btn:hover { opacity: .75; }
+
+    /* Tab bar (for で) */
+    .tab-bar { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+    .tab-btn {
+      padding: 8px 22px; border-radius: 10px;
+      border: 2px solid var(--border);
+      background: white; font-family: inherit;
+      font-size: .9rem; font-weight: 600;
+      color: var(--muted); cursor: pointer; transition: .15s;
+    }
+    .tab-btn:hover:not(.active) { border-color: #0891b2; color: #0891b2; }
+    .tab-btn.active { color: white; border-color: transparent; }
+
+    /* Nav controls */
+    .nav-controls {
+      max-width: 780px; margin: 0 auto;
+      display: flex; align-items: center;
+      justify-content: space-between;
+      padding: 16px 16px 28px;
+    }
+    .nav-arrow {
+      padding: 11px 24px;
+      border: 2px solid var(--border);
+      background: white; border-radius: 12px;
+      font-size: .95rem; color: var(--muted);
+      cursor: pointer; transition: .15s; font-weight: 600;
+    }
+    .nav-arrow:hover:not(:disabled) { border-color: #7c3aed; color: #7c3aed; }
+    .nav-arrow:disabled { opacity: .3; cursor: not-allowed; }
+    .pos-indicator { font-size: .95rem; color: var(--muted); }
+    .pos-indicator strong { color: var(--text); }
+
+    @media (max-width: 520px) {
+      .particle-title-card { flex-direction: column; text-align: center; padding: 20px; }
+      .particle-char-wrap { width: 90px; height: 90px; }
+      .particle-char-big { font-size: 3.5rem; }
+      .examples-grid { grid-template-columns: 1fr; }
+      .g-label { min-width: 75px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="app-header">
+  <div>
+    <h1>Particle Guide &nbsp;|&nbsp; <ruby>助詞<rt>じょし</rt></ruby>ガイド</h1>
+    <div class="sub">Japanese Particle Reference for Learners</div>
+  </div>
+</div>
+
+<div class="particle-nav" id="particle-nav"></div>
+
+<div id="slide-area"></div>
+
+<div class="nav-controls">
+  <button class="nav-arrow" id="prev-btn" onclick="navigate(-1)" disabled>← 前へ</button>
+  <div class="pos-indicator"><strong id="pos-cur">1</strong> / <span id="pos-tot"></span></div>
+  <button class="nav-arrow" id="next-btn" onclick="navigate(1)">次へ →</button>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════
+//  SLIDE DATA
+// ═══════════════════════════════════════════════
+const SLIDES = [
+
+  // ── は ──
+  {
+    char:'は', romaji:'wa', color:'#f43f5e',
+    name:'Topic Marker',
+    desc:'Marks the topic of the sentence — what the sentence is about. The rest of the sentence is a comment about that topic.',
+    uses:[{
+      label: null,
+      examples:[
+        { rows:[{label:'Topic', jp:'わたし', en:'I / me'}, {label:'Comment', jp:'がくせい', en:'student'}],
+          before:'わたし', after:'がくせいです。', eng:'I am a student.' },
+        { rows:[{label:'Topic', jp:'これ', en:'this'}, {label:'Comment', jp:'えんぴつ', en:'pencil'}],
+          before:'これ', after:'えんぴつです。', eng:'This is a pencil.' },
+        { rows:[{label:'Topic', jp:'にほんご', en:'Japanese'}, {label:'Comment', jp:'おもしろい', en:'interesting'}],
+          before:'にほんご', after:'おもしろいです。', eng:'Japanese is interesting.' },
+      ]
+    }]
+  },
+
+  // ── が ──
+  {
+    char:'が', romaji:'ga', color:'#ef4444',
+    name:'Subject Marker',
+    desc:'Marks the subject of the sentence — who or what is doing or experiencing something.',
+    uses:[{
+      label: null,
+      examples:[
+        { rows:[{label:'Subject', jp:'ねこ', en:'cat'}, {label:'Predicate', jp:'います', en:'exists (animate)'}],
+          before:'ねこ', after:'います。', eng:'There is a cat.' },
+        { rows:[{label:'Subject', jp:'あめ', en:'rain'}, {label:'Action', jp:'ふっています', en:'is falling'}],
+          before:'あめ', after:'ふっています。', eng:"It's raining." },
+        { rows:[{label:'Liked thing', jp:'コーヒー', en:'coffee'}, {label:'Feeling', jp:'すき', en:'like / fond of'}],
+          before:'コーヒー', after:'すきです。', eng:'I like coffee.' },
+      ]
+    }]
+  },
+
+  // ── も ──
+  {
+    char:'も', romaji:'mo', color:'#a855f7',
+    name:'"Also" / "Too" Marker',
+    desc:'Replaces が or を to mean "also" or "too". Combined with に, へ, で, と to make にも / へも / でも / とも.',
+    uses:[
+      {
+        label:'① Replaces が / を / は',
+        examples:[
+          { rows:[{label:'Also (subject)', jp:'ともだち', en:'friend'}, {label:'Action', jp:'くる', en:'to come'}],
+            before:'ともだち', after:'きます。', eng:'My friend is also coming.' },
+          { rows:[{label:'Also (object)', jp:'コーヒー', en:'coffee'}, {label:'Action', jp:'のむ', en:'to drink'}],
+            before:'コーヒー', after:'のみます。', eng:'I drink coffee too.' },
+          { rows:[{label:'Also (topic)', jp:'わたし', en:'I / me'}, {label:'Comment', jp:'わかりません', en:"don't understand"}],
+            before:'わたし', after:'わかりません。', eng:"I don't understand either." },
+        ]
+      },
+      {
+        label:'② Combined: にも / へも / でも / とも',
+        examples:[
+          { rows:[{label:'Destination', jp:'がっこう', en:'school'}, {label:'Action', jp:'いく', en:'to go'}],
+            before:'がっこう', after:'いきます。', eng:'I also go to school.', compound:'にも' },
+          { rows:[{label:'Direction', jp:'にほん', en:'Japan'}, {label:'Action', jp:'いく', en:'to go'}],
+            before:'にほん', after:'いきたいです。', eng:'I also want to go to Japan.', compound:'へも' },
+          { rows:[{label:'Means', jp:'バス', en:'bus'}, {label:'Action', jp:'いく', en:'to go'}],
+            before:'バス', after:'いきます。', eng:'I can also go by bus.', compound:'でも' },
+          { rows:[{label:'Partner', jp:'ともだち', en:'friend'}, {label:'Action', jp:'いく', en:'to go'}],
+            before:'ともだち', after:'いきます。', eng:'I also go with my friend.', compound:'とも' },
+        ]
+      },
+    ]
+  },
+
+  // ── を ──
+  {
+    char:'を', romaji:'wo', color:'#f97316',
+    name:'Direct Object Marker',
+    desc:'Marks the direct object of an action — the thing that the action is done to.',
+    uses:[{
+      label: null,
+      examples:[
+        { rows:[{label:'Action', jp:'たべる', en:'to eat'}, {label:'Object', jp:'ごはん', en:'rice / meal'}],
+          before:'ごはん', after:'たべます。', eng:'I eat rice.' },
+        { rows:[{label:'Action', jp:'のむ', en:'to drink'}, {label:'Object', jp:'みず', en:'water'}],
+          before:'みず', after:'のみます。', eng:'I drink water.' },
+        { rows:[{label:'Action', jp:'みる', en:'to watch'}, {label:'Object', jp:'えいが', en:'movie'}],
+          before:'えいが', after:'みます。', eng:'I watch a movie.' },
+      ]
+    }]
+  },
+
+  // ── に ──
+  {
+    char:'に', romaji:'ni', color:'#d97706',
+    name:'Direction / Location / Time / Recipient',
+    desc:'One of the most versatile particles. Shows destination, specific time, location of existence, or the recipient of an action.',
+    uses:[
+      {
+        label:'① Destination — where you go',
+        examples:[
+          { rows:[{label:'Action', jp:'いく', en:'to go'}, {label:'Destination', jp:'がっこう', en:'school'}],
+            before:'がっこう', after:'いきます。', eng:'I go to school.' },
+          { rows:[{label:'Action', jp:'かえる', en:'to return'}, {label:'Destination', jp:'いえ', en:'home'}],
+            before:'いえ', after:'かえります。', eng:'I return home.' },
+        ]
+      },
+      {
+        label:'② Specific time — when something happens',
+        examples:[
+          { rows:[{label:'Time', jp:'7じ', en:'7 o\'clock'}, {label:'Action', jp:'おきる', en:'to wake up'}],
+            before:'7じ', after:'おきます。', eng:'I wake up at 7.' },
+          { rows:[{label:'Time', jp:'げつようび', en:'Monday'}, {label:'Action', jp:'はじまる', en:'to start'}],
+            before:'げつようび', after:'はじまります。', eng:'It starts on Monday.' },
+        ]
+      },
+      {
+        label:'③ Recipient — who receives something',
+        examples:[
+          { rows:[{label:'Recipient', jp:'ともだち', en:'friend'}, {label:'Action', jp:'てがみをかく', en:'to write a letter'}],
+            before:'ともだち', after:'てがみをかきます。', eng:'I write a letter to my friend.' },
+        ]
+      },
+    ]
+  },
+
+  // ── へ ──
+  {
+    char:'へ', romaji:'e', color:'#16a34a',
+    name:'Direction Marker',
+    desc:'Shows the direction of movement — where you are heading toward. Similar to に but emphasises the direction rather than the destination.',
+    uses:[{
+      label: null,
+      examples:[
+        { rows:[{label:'Direction', jp:'にほん', en:'Japan'}, {label:'Action', jp:'いく', en:'to go'}],
+          before:'にほん', after:'いきたいです。', eng:'I want to go to Japan.' },
+        { rows:[{label:'Direction', jp:'いえ', en:'home'}, {label:'Action', jp:'かえる', en:'to return'}],
+          before:'いえ', after:'かえります。', eng:'I return home.' },
+        { rows:[{label:'Direction', jp:'みぎ', en:'right'}, {label:'Action', jp:'まがる', en:'to turn'}],
+          before:'みぎ', after:'まがってください。', eng:'Please turn right.' },
+      ]
+    }]
+  },
+
+  // ── で ──
+  {
+    char:'で', romaji:'de', color:'#0891b2',
+    name:'Location of Action / Means',
+    desc:'Shows WHERE an action takes place, or the tool / method / means used to do something.',
+    tabbed: true,
+    uses:[
+      {
+        tabLabel:'① 場所 Location',
+        label:'① Location — where the action happens',
+        examples:[
+          { rows:[{label:'Place', jp:'こうえん', en:'park'}, {label:'Action', jp:'あそぶ', en:'to play'}],
+            before:'こうえん', after:'あそびます。', eng:'I play in the park.' },
+          { rows:[{label:'Place', jp:'スーパー', en:'supermarket'}, {label:'Action', jp:'かう', en:'to buy'}],
+            before:'スーパー', after:'かいます。', eng:'I buy it at the supermarket.' },
+          { rows:[{label:'Place', jp:'としょかん', en:'library'}, {label:'Action', jp:'べんきょうする', en:'to study'}],
+            before:'としょかん', after:'べんきょうします。', eng:'I study at the library.' },
+        ]
+      },
+      {
+        tabLabel:'② 手段 Means',
+        label:'② Means — the tool or method used',
+        examples:[
+          { rows:[{label:'Means', jp:'バス', en:'bus'}, {label:'Action', jp:'いく', en:'to go'}],
+            before:'バス', after:'いきます。', eng:'I go by bus.' },
+          { rows:[{label:'Means', jp:'はし', en:'chopsticks'}, {label:'Action', jp:'たべる', en:'to eat'}],
+            before:'はし', after:'たべます。', eng:'I eat with chopsticks.' },
+          { rows:[{label:'Means', jp:'にほんご', en:'Japanese'}, {label:'Action', jp:'はなす', en:'to speak'}],
+            before:'にほんご', after:'はなします。', eng:'I speak in Japanese.' },
+        ]
+      },
+    ]
+  },
+
+  // ── の ──
+  {
+    char:'の', romaji:'no', color:'#db2777',
+    name:'Possession / Noun Modifier',
+    desc:'Links two nouns. Shows possession ("A\'s B") or modifies a noun ("B of A").',
+    uses:[{
+      label: null,
+      examples:[
+        { rows:[{label:'Owner', jp:'わたし', en:'I / me'}, {label:'Thing', jp:'ほん', en:'book'}],
+          before:'わたし', after:'ほんです。', eng:"It's my book." },
+        { rows:[{label:'Origin', jp:'にほん', en:'Japan'}, {label:'Thing', jp:'たべもの', en:'food'}],
+          before:'にほん', after:'たべものです。', eng:"It's Japanese food." },
+        { rows:[{label:'Type', jp:'にほんご', en:'Japanese'}, {label:'Thing', jp:'じゅぎょう', en:'lesson'}],
+          before:'にほんご', after:'じゅぎょうです。', eng:"It's a Japanese lesson." },
+      ]
+    }]
+  },
+
+  // ── と ──
+  {
+    char:'と', romaji:'to', color:'#0e7490',
+    name:'"With" / "And" Marker',
+    desc:'Used in two ways: to list things together ("A and B"), or to show who accompanies an action ("with A").',
+    uses:[
+      {
+        label:'① Accompaniment — doing something with someone',
+        examples:[
+          { rows:[{label:'Partner', jp:'ともだち', en:'friend'}, {label:'Action', jp:'えいがをみる', en:'to watch a movie'}],
+            before:'ともだち', after:'えいがをみます。', eng:'I watch a movie with my friend.' },
+          { rows:[{label:'Partner', jp:'ちち', en:'father'}, {label:'Action', jp:'テニスをする', en:'to play tennis'}],
+            before:'ちち', after:'テニスをします。', eng:'I play tennis with my father.' },
+        ]
+      },
+      {
+        label:'② Listing — connecting nouns',
+        examples:[
+          { rows:[{label:'Item 1', jp:'パン', en:'bread'}, {label:'Item 2', jp:'ぎゅうにゅう', en:'milk'}, {label:'Action', jp:'かう', en:'to buy'}],
+            before:'パン', after:'ぎゅうにゅうをかいます。', eng:'I buy bread and milk.' },
+          { rows:[{label:'Item 1', jp:'コーヒー', en:'coffee'}, {label:'Item 2', jp:'ケーキ', en:'cake'}, {label:'Action', jp:'たのむ', en:'to order'}],
+            before:'コーヒー', after:'ケーキをたのみます。', eng:'I order coffee and cake.' },
+        ]
+      },
+    ]
+  },
+
+  // ── から ──
+  {
+    char:'から', romaji:'kara', color:'#2563eb', horizontal: true,
+    name:'"From" Marker',
+    desc:'Shows the starting point — where something begins in space or time.',
+    uses:[{
+      label: null,
+      examples:[
+        { rows:[{label:'From (place)', jp:'とうきょう', en:'Tokyo'}, {label:'Action', jp:'くる', en:'to come'}],
+          before:'とうきょう', after:'きました。', eng:'I came from Tokyo.' },
+        { rows:[{label:'From (time)', jp:'9じ', en:'9 o\'clock'}, {label:'Action', jp:'はじまる', en:'to start'}],
+          before:'9じ', after:'はじまります。', eng:'It starts at 9 o\'clock.' },
+        { rows:[{label:'From (place)', jp:'がっこう', en:'school'}, {label:'Action', jp:'あるいてかえる', en:'to walk home'}],
+          before:'がっこう', after:'あるいてかえります。', eng:'I walk home from school.' },
+      ]
+    }]
+  },
+
+  // ── まで ──
+  {
+    char:'まで', romaji:'made', color:'#7c3aed', horizontal: true,
+    name:'"Until" / "As Far As" Marker',
+    desc:'Shows the end point — where something finishes in time or space. Often paired with から (from … to …).',
+    uses:[{
+      label: null,
+      examples:[
+        { rows:[{label:'Until (time)', jp:'5じ', en:'5 o\'clock'}, {label:'Action', jp:'はたらく', en:'to work'}],
+          before:'5じ', after:'はたらきます。', eng:'I work until 5 o\'clock.' },
+        { rows:[{label:'To (place)', jp:'えき', en:'station'}, {label:'Action', jp:'あるく', en:'to walk'}],
+          before:'えき', after:'あるきます。', eng:'I walk to the station.' },
+        { rows:[{label:'From → To', jp:'9じ〜5じ', en:'9 o\'clock → 5 o\'clock'}],
+          before:'9じから5じ', after:'はたらきます。', eng:'I work from 9 to 5.' },
+      ]
+    }]
+  },
+
+  // ── より ──
+  {
+    char:'より', romaji:'yori', color:'#65a30d', horizontal: true,
+    name:'Comparison Marker',
+    desc:'Marks the standard of comparison. "A より B のほうが …" = "B is more … than A."',
+    uses:[{
+      label: null,
+      examples:[
+        { rows:[{label:'Less than', jp:'にほん', en:'Japan'}, {label:'More than', jp:'アメリカ', en:'America'}],
+          before:'にほん', after:'アメリカのほうがおおきいです。', eng:'America is bigger than Japan.' },
+        { rows:[{label:'Less than', jp:'バス', en:'bus'}, {label:'More than', jp:'でんしゃ', en:'train'}],
+          before:'バス', after:'でんしゃのほうがはやいです。', eng:'The train is faster than the bus.' },
+        { rows:[{label:'Less than', jp:'なつ', en:'summer'}, {label:'More than', jp:'ふゆ', en:'winter'}],
+          before:'なつ', after:'ふゆのほうがすきです。', eng:'I like winter more than summer.' },
+      ]
+    }]
+  },
+
+]; // end SLIDES
+
+// ═══════════════════════════════════════════════
+//  STATE & RENDERING
+// ═══════════════════════════════════════════════
+let current   = 0;
+let activeTab = 0;
+
+// Build nav strip
+(function buildNav() {
+  const el = document.getElementById('particle-nav');
+  document.getElementById('pos-tot').textContent = SLIDES.length;
+  SLIDES.forEach((s, i) => {
+    const chip = document.createElement('div');
+    chip.className = 'nav-chip';
+    chip.id = 'nc-' + i;
+    chip.textContent = s.char;
+    chip.style.backgroundColor = s.color;
+    chip.onclick = () => goTo(i);
+    el.appendChild(chip);
+  });
+})();
+
+function goTo(idx) {
+  current   = idx;
+  activeTab = 0;
+  render();
+}
+
+function switchTab(idx) {
+  activeTab = idx;
+  render();
+}
+
+function navigate(dir) {
+  const next = current + dir;
+  if (next < 0 || next >= SLIDES.length) return;
+  goTo(next);
+}
+
+function render() {
+  const s = SLIDES[current];
+
+  // Update nav strip
+  SLIDES.forEach((_, i) => {
+    document.getElementById('nc-' + i).classList.toggle('active', i === current);
+  });
+
+  // Update position
+  document.getElementById('pos-cur').textContent = current + 1;
+  document.getElementById('prev-btn').disabled = current === 0;
+  document.getElementById('next-btn').disabled = current === SLIDES.length - 1;
+
+  // Build slide HTML
+  let html = '';
+
+  // ── Particle title card ──
+  html += `
+    <div class="particle-title-card">
+      <div class="particle-char-wrap" style="background:${s.color}20; border: 3px solid ${s.color}40;">
+        <span class="particle-char-big" style="color:${s.color}">${s.char}</span>
+      </div>
+      <div class="particle-info">
+        <div class="particle-label">Particle: ${s.romaji}</div>
+        <div class="particle-name">${s.name}</div>
+        <div class="particle-desc">${s.desc}</div>
+      </div>
+    </div>`;
+
+  // ── Uses + examples ──
+  let exCount = 0;
+
+  // Helper: render one use section's examples
+  function renderUse(use, showLabel) {
+    let h = `<div class="use-section">`;
+    if (showLabel && use.label) h += `<div class="use-label">${use.label}</div>`;
+    h += `<div class="examples-grid${s.horizontal ? ' horizontal' : ''}">`;
+    use.examples.forEach((ex, ei) => {
+      const exId = `ex${exCount++}`;
+      const pChar = ex.compound || s.char;
+      h += `
+        <div class="example-card" style="border-left-color:${s.color}">
+          <div class="ex-num">Example ${ei + 1}</div>
+          <div class="grammar-rows">`;
+      ex.rows.forEach(row => {
+        h += `
+            <div class="grammar-row">
+              <span class="g-label">${row.label}:</span>
+              <span class="g-jp">${row.jp}</span>
+              <span class="g-en">${row.en ? '— ' + row.en : ''}</span>
+            </div>`;
+      });
+      h += `
+          </div>
+          <div class="sentence-line" id="sent-${exId}">
+            <div class="sent-jp">
+              ${ex.before}<span class="p-highlight" style="color:${s.color}">${pChar}</span>${ex.after}
+            </div>
+            <div class="sent-en">${ex.eng}</div>
+          </div>
+          <button class="reveal-btn" id="btn-${exId}"
+            style="color:${s.color}; border-color:${s.color}"
+            onclick="toggleExample('${exId}','${s.color}')">
+            答えを見る →
+          </button>
+        </div>`;
+    });
+    h += `</div></div>`;
+    return h;
+  }
+
+  if (s.tabbed) {
+    // Tab bar
+    html += `<div class="tab-bar">`;
+    s.uses.forEach((use, i) => {
+      const label = use.tabLabel || use.label || `Tab ${i+1}`;
+      const isActive = i === activeTab;
+      html += `<button class="tab-btn${isActive ? ' active' : ''}"
+        style="${isActive ? `background:${s.color}` : ''}"
+        onclick="switchTab(${i})">${label}</button>`;
+    });
+    html += `</div>`;
+    html += renderUse(s.uses[activeTab], false);
+  } else {
+    s.uses.forEach(use => { html += renderUse(use, true); });
+  }
+
+  document.getElementById('slide-area').innerHTML = html;
+
+  // Scroll to top of content
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function toggleExample(id, color) {
+  const sent = document.getElementById('sent-' + id);
+  const btn  = document.getElementById('btn-' + id);
+  const show = sent.classList.toggle('visible');
+  if (show) {
+    btn.textContent = '▲ 閉じる';
+    btn.style.background = color;
+    btn.style.color = 'white';
+  } else {
+    btn.textContent = '答えを見る →';
+    btn.style.background = 'transparent';
+    btn.style.color = color;
+  }
+}
+
+// Keyboard navigation
+document.addEventListener('keydown', e => {
+  if (e.code === 'ArrowRight') navigate(1);
+  else if (e.code === 'ArrowLeft')  navigate(-1);
+});
+
+// Init
+render();
+</script>
+</body>
+</html>

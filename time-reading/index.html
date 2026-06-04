@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>時間の読み練習 | Time Reading Practice</title>
+  <link href="https://fonts.googleapis.com/css2?family=Klee+One:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:       #f0f4f8;
+      --card:     #ffffff;
+      --primary:  #0ea5e9;
+      --pri-dark: #0369a1;
+      --green:    #059669;
+      --green-bg: #d1fae5;
+      --am-col:   #0ea5e9;
+      --pm-col:   #f97316;
+      --word-col: #1e293b;
+      --read-col: #0369a1;
+      --text:     #334155;
+      --muted:    #64748b;
+      --border:   #e2e8f0;
+      --shadow:   0 4px 24px rgba(14,165,233,.12);
+      --r:        16px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Klee One', 'UD デジタル 教科書体 NK-R', 'Hiragino Maru Gothic ProN', sans-serif;
+      background: var(--bg);
+      min-height: 100vh;
+      color: var(--text);
+    }
+    rt { font-size: .55em; line-height: 1.3; }
+
+    /* ── Header ── */
+    .app-header {
+      background: linear-gradient(135deg, var(--pri-dark), var(--primary));
+      color: white; text-align: center;
+      padding: 22px 20px 18px;
+    }
+    .app-header h1 { font-size: 1.7rem; letter-spacing: 3px; }
+    .app-header p  { font-size: .8rem; opacity: .7; margin-top: 3px; letter-spacing: 1px; }
+
+    /* ── Screens ── */
+    .screen { display: none; }
+    .screen.active { display: block; }
+
+    /* ═══════ SETUP ═══════ */
+    #setup { max-width: 580px; margin: 0 auto; padding: 28px 16px; }
+
+    .card-section {
+      background: var(--card);
+      border-radius: var(--r);
+      padding: 24px;
+      margin-bottom: 16px;
+      box-shadow: var(--shadow);
+    }
+    .card-section h2 {
+      font-size: .8rem; color: var(--muted);
+      text-transform: uppercase; letter-spacing: 2px;
+      margin-bottom: 18px;
+    }
+
+    /* Mode chips */
+    .mode-chips { display: flex; gap: 8px; }
+    .mode-chip {
+      flex: 1; padding: 14px 8px;
+      border-radius: 12px; font-size: .9rem; font-weight: 600;
+      border: 2px solid var(--border); color: var(--muted);
+      background: white; cursor: pointer; text-align: center;
+      transition: .15s; user-select: none;
+    }
+    .mode-chip:hover:not(.on) { border-color: var(--primary); color: var(--primary); }
+    .mode-chip.on { background: var(--primary); border-color: var(--primary); color: white; }
+    .mode-chip .mode-icon { font-size: 1.5rem; display: block; margin-bottom: 4px; }
+
+    /* Level chips */
+    .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+    .chip {
+      padding: 8px 18px; border-radius: 20px;
+      font-size: .9rem; font-weight: 600;
+      border: 2px solid var(--border); color: var(--muted);
+      background: white; cursor: pointer; transition: .15s; user-select: none;
+    }
+    .chip:hover:not(.on) { border-color: var(--primary); color: var(--primary); }
+    .chip.on { background: var(--primary); border-color: var(--primary); color: white; }
+
+    .selected-info { margin-top: 12px; font-size: .85rem; color: var(--muted); }
+
+    /* Badge */
+    .word-badge {
+      text-align: center; padding: 14px;
+      background: var(--green-bg); border-radius: 12px;
+      color: var(--green); font-weight: 700; font-size: 1rem;
+    }
+    .word-badge span { font-size: 1.9rem; vertical-align: middle; }
+
+    /* Toggle */
+    .toggle-row {
+      display: flex; align-items: center;
+      justify-content: space-between; margin-top: 14px;
+    }
+    .toggle-row + .toggle-row { border-top: 1px solid var(--border); padding-top: 14px; }
+    .toggle-label { font-size: .95rem; }
+    .sw { position: relative; width: 46px; height: 25px; }
+    .sw input { opacity: 0; width: 0; height: 0; }
+    .sw-slider {
+      position: absolute; inset: 0;
+      background: var(--border); border-radius: 13px;
+      cursor: pointer; transition: .2s;
+    }
+    .sw-slider::before {
+      content: ''; position: absolute;
+      width: 19px; height: 19px; left: 3px; top: 3px;
+      background: white; border-radius: 50%; transition: .2s;
+    }
+    .sw input:checked + .sw-slider { background: var(--primary); }
+    .sw input:checked + .sw-slider::before { transform: translateX(21px); }
+
+    /* Stepper */
+    .stepper { display: flex; align-items: center; gap: 14px; }
+    .step-btn {
+      width: 46px; height: 46px; border-radius: 50%;
+      border: 2px solid var(--primary); background: white;
+      color: var(--primary); font-size: 1.4rem; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: .15s; flex-shrink: 0;
+    }
+    .step-btn:hover:not(:disabled) { background: var(--primary); color: white; }
+    .step-btn:disabled { border-color: var(--border); color: var(--border); cursor: not-allowed; }
+    .step-info { flex: 1; text-align: center; }
+    .step-main { font-size: 1.25rem; font-weight: 700; color: var(--word-col); }
+    .step-sub  { font-size: .8rem; color: var(--muted); margin-top: 2px; }
+
+    /* Start button */
+    .start-btn {
+      width: 100%; padding: 17px;
+      background: linear-gradient(135deg, var(--pri-dark), var(--primary));
+      color: white; border: none; border-radius: var(--r);
+      font-size: 1.1rem; font-weight: 700; cursor: pointer;
+      letter-spacing: .5px;
+      box-shadow: 0 6px 20px rgba(14,165,233,.35);
+      transition: transform .15s, box-shadow .15s;
+    }
+    .start-btn:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 28px rgba(14,165,233,.45);
+    }
+    .start-btn:disabled { opacity: .35; cursor: not-allowed; transform: none; box-shadow: none; }
+
+    /* ═══════ PRACTICE ═══════ */
+    #practice { max-width: 660px; margin: 0 auto; padding: 20px 16px; }
+
+    .prac-header {
+      display: flex; align-items: center;
+      justify-content: space-between; margin-bottom: 14px;
+    }
+    .back-btn {
+      background: none; border: none;
+      color: var(--primary); font-size: .9rem; font-weight: 600;
+      cursor: pointer; padding: 4px 0;
+    }
+    .back-btn:hover { text-decoration: underline; }
+    .prog-text { color: var(--muted); font-size: .95rem; }
+    .prog-text strong { color: var(--primary); font-size: 1.05rem; }
+    .rows-badge {
+      font-size: .8rem; color: var(--muted);
+      background: white; border: 1px solid var(--border);
+      border-radius: 20px; padding: 3px 10px;
+    }
+    .prog-bar {
+      height: 4px; background: var(--border);
+      border-radius: 2px; margin-bottom: 24px; overflow: hidden;
+    }
+    .prog-fill {
+      height: 100%; background: var(--primary);
+      border-radius: 2px; transition: width .35s ease;
+    }
+
+    /* Flash card — fixed height so buttons never move */
+    .flash-card {
+      background: white; border-radius: 24px;
+      box-shadow: 0 8px 32px rgba(0,0,0,.09);
+      padding: 28px 40px 24px;
+      text-align: center;
+      height: 440px;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      margin-bottom: 20px;
+    }
+
+    /* AM / PM label */
+    .ampm-disp {
+      font-size: 1.6rem; font-weight: 700;
+      letter-spacing: 4px; margin-bottom: 10px;
+    }
+    .ampm-disp.am { color: var(--am-col); }
+    .ampm-disp.pm { color: var(--pm-col); }
+
+    /* Analog clock SVG */
+    .clock-svg { width: 200px; height: 200px; flex-shrink: 0; }
+    .clock-face     { fill: white; stroke: #cbd5e1; stroke-width: 3; }
+    .clock-tick-big { stroke: #334155; stroke-width: 3; stroke-linecap: round; }
+    .clock-tick-sm  { stroke: #94a3b8; stroke-width: 1.5; stroke-linecap: round; }
+    .clock-hand-h   { stroke: #1e293b; stroke-width: 7; stroke-linecap: round; }
+    .clock-hand-m   { stroke: #0ea5e9; stroke-width: 4.5; stroke-linecap: round; }
+    .clock-center   { fill: #1e293b; }
+
+    /* Digital display */
+    .digital-display {
+      font-size: clamp(3.5rem, 12vw, 5.5rem);
+      font-weight: 700; color: var(--word-col);
+      letter-spacing: 4px; line-height: 1;
+    }
+
+    /* Both mode — clock + digital side by side */
+    .both-wrap { display: flex; align-items: center; gap: 24px; }
+    .both-wrap .clock-svg { width: 170px; height: 170px; }
+    .both-wrap .digital-display { font-size: clamp(2.2rem, 7vw, 3.2rem); }
+
+    /* Answer reveal */
+    .answer-wrap {
+      overflow: hidden;
+      transition: max-height .4s ease, opacity .3s ease;
+      max-height: 0; opacity: 0; margin-top: 0;
+    }
+    .answer-wrap.open { max-height: 130px; opacity: 1; margin-top: 14px; }
+    .answer-kanji {
+      font-size: 1.6rem; color: var(--read-col);
+      font-weight: 600; letter-spacing: 2px; margin-bottom: 8px;
+    }
+    .answer-reading {
+      display: inline-block; font-size: 1.15rem;
+      color: var(--green); font-weight: 500;
+      background: var(--green-bg); border-radius: 12px;
+      padding: 7px 22px;
+    }
+
+    /* Controls */
+    .main-action { margin-bottom: 10px; }
+    .main-action .main-btn { width: 100%; }
+    .controls { display: flex; gap: 10px; align-items: stretch; }
+    .nav-btn {
+      padding: 14px 16px; border: 2px solid var(--border);
+      background: white; border-radius: 12px;
+      font-size: .9rem; color: var(--muted);
+      cursor: pointer; transition: .15s; min-width: 76px;
+    }
+    .nav-btn:hover:not(:disabled) { border-color: var(--primary); color: var(--primary); }
+    .nav-btn:disabled { opacity: .3; cursor: not-allowed; }
+    .main-btn {
+      padding: 16px 20px; background: var(--primary);
+      color: white; border: none; border-radius: 12px;
+      font-size: 1rem; font-weight: 700;
+      cursor: pointer; transition: background .15s;
+    }
+    .main-btn:hover { background: var(--pri-dark); }
+    .main-btn.revealed { background: var(--green); }
+    .main-btn.revealed:hover { background: #047857; }
+    .kbd-hint {
+      text-align: center; color: var(--muted);
+      font-size: .78rem; margin-top: 14px;
+    }
+    kbd {
+      background: white; border: 1px solid var(--border);
+      border-radius: 4px; padding: 1px 5px;
+      font-size: .72rem; font-family: monospace;
+    }
+
+    /* ═══════ COMPLETE ═══════ */
+    #complete { max-width: 420px; margin: 60px auto; padding: 20px; text-align: center; }
+    .complete-card {
+      background: white; border-radius: 24px;
+      padding: 48px 36px; box-shadow: var(--shadow);
+    }
+    .complete-emoji { font-size: 3.5rem; margin-bottom: 14px; }
+    .complete-card h2 { font-size: 1.6rem; color: var(--word-col); margin-bottom: 6px; }
+    .complete-card p  { color: var(--muted); margin-bottom: 28px; }
+    .btn-stack { display: flex; flex-direction: column; gap: 10px; }
+    .btn-pri {
+      padding: 14px; background: var(--primary);
+      color: white; border: none; border-radius: 12px;
+      font-size: 1rem; font-weight: 600; cursor: pointer; transition: .15s;
+    }
+    .btn-pri:hover { background: var(--pri-dark); }
+    .btn-sec {
+      padding: 14px; background: white; color: var(--text);
+      border: 2px solid var(--border); border-radius: 12px;
+      font-size: 1rem; font-weight: 600; cursor: pointer; transition: .15s;
+    }
+    .btn-sec:hover { border-color: var(--primary); color: var(--primary); }
+
+    @media (max-width: 480px) {
+      .flash-card { padding: 20px 16px; height: 380px; }
+      .clock-svg { width: 160px; height: 160px; }
+      .both-wrap .clock-svg { width: 130px; height: 130px; }
+      .ampm-disp { font-size: 1.3rem; margin-bottom: 6px; }
+      .mode-chip .mode-icon { font-size: 1.2rem; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="app-header">
+  <h1><ruby>時間<rt>じかん</rt></ruby>の<ruby>読<rt>よ</rt></ruby>み<ruby>練習<rt>れんしゅう</rt></ruby></h1>
+  <p>Time Reading Practice</p>
+</div>
+
+<!-- ──────────── SETUP ──────────── -->
+<div id="setup" class="screen active">
+
+  <div class="card-section">
+    <h2><ruby>表示<rt>ひょうじ</rt></ruby><ruby>形式<rt>けいしき</rt></ruby></h2>
+    <div class="mode-chips">
+      <div class="mode-chip on" id="mode-analog" onclick="setMode('analog')">
+        <span class="mode-icon">🕐</span>アナログ
+      </div>
+      <div class="mode-chip" id="mode-digital" onclick="setMode('digital')">
+        <span class="mode-icon">🔢</span>デジタル
+      </div>
+      <div class="mode-chip" id="mode-both" onclick="setMode('both')">
+        <span class="mode-icon">✨</span><ruby>両方<rt>りょうほう</rt></ruby>
+      </div>
+    </div>
+  </div>
+
+  <div class="card-section">
+    <h2><ruby>練習<rt>れんしゅう</rt></ruby>する<ruby>時間<rt>じかん</rt></ruby>の<ruby>種類<rt>しゅるい</rt></ruby></h2>
+    <div class="chips" id="level-chips"></div>
+    <div class="selected-info" id="selected-info">
+      <ruby>種類<rt>しゅるい</rt></ruby>を<ruby>選<rt>えら</rt></ruby>んでください
+    </div>
+  </div>
+
+  <div class="card-section">
+    <div class="word-badge">
+      <ruby>利用<rt>りよう</rt></ruby>できる<ruby>問題<rt>もんだい</rt></ruby>：<span id="time-count">0</span> <ruby>問<rt>もん</rt></ruby>
+    </div>
+    <div class="toggle-row">
+      <span class="toggle-label">🔀 シャッフル</span>
+      <label class="sw">
+        <input type="checkbox" id="shuffle" checked>
+        <span class="sw-slider"></span>
+      </label>
+    </div>
+    <div class="toggle-row">
+      <span class="toggle-label">🌅 <ruby>午前<rt>ごぜん</rt></ruby>・<ruby>午後<rt>ごご</rt></ruby>をつける</span>
+      <label class="sw">
+        <input type="checkbox" id="use-ampm" onchange="refreshSetup()">
+        <span class="sw-slider"></span>
+      </label>
+    </div>
+  </div>
+
+  <div class="card-section">
+    <h2><ruby>出題数<rt>しゅつだいすう</rt></ruby></h2>
+    <div class="stepper">
+      <button class="step-btn" id="prob-minus" onclick="changeProbs(-1)" disabled>−</button>
+      <div class="step-info">
+        <div class="step-main" id="prob-label"><ruby>全<rt>すべ</rt></ruby>て</div>
+        <div class="step-sub"  id="prob-sub"><ruby>種類<rt>しゅるい</rt></ruby>を<ruby>選<rt>えら</rt></ruby>ぶと<ruby>設定<rt>せってい</rt></ruby>できます</div>
+      </div>
+      <button class="step-btn" id="prob-plus" onclick="changeProbs(1)" disabled>＋</button>
+    </div>
+  </div>
+
+  <button class="start-btn" id="start-btn" disabled onclick="startPractice()">
+    <ruby>練習<rt>れんしゅう</rt></ruby>を<ruby>始<rt>はじ</rt></ruby>める →
+  </button>
+</div>
+
+<!-- ──────────── PRACTICE ──────────── -->
+<div id="practice" class="screen">
+  <div class="prac-header">
+    <button class="back-btn" onclick="goSetup()">← <ruby>設定<rt>せってい</rt></ruby></button>
+    <div class="prog-text"><strong id="p-cur">1</strong> / <span id="p-tot">0</span></div>
+    <div class="rows-badge" id="rows-badge"></div>
+  </div>
+  <div class="prog-bar">
+    <div class="prog-fill" id="prog-fill" style="width:0%"></div>
+  </div>
+
+  <div class="flash-card">
+    <div id="clock-wrap"></div>
+    <div class="answer-wrap" id="answer-wrap">
+      <div class="answer-kanji"   id="ans-kanji"></div>
+      <div class="answer-reading" id="ans-reading"></div>
+    </div>
+  </div>
+
+  <div class="main-action">
+    <button class="main-btn" id="main-btn" onclick="doMain()">
+      <ruby>答<rt>こた</rt></ruby>えを<ruby>見<rt>み</rt></ruby>る
+    </button>
+  </div>
+  <div class="controls">
+    <button class="nav-btn" id="prev-btn" onclick="go(-1)" disabled>← <ruby>前<rt>まえ</rt></ruby>へ</button>
+    <button class="nav-btn" id="skip-btn" onclick="go(1)">スキップ →</button>
+  </div>
+  <div class="kbd-hint">
+    <kbd>Space</kbd> <ruby>答<rt>こた</rt></ruby>えを<ruby>見<rt>み</rt></ruby>る / <ruby>次<rt>つぎ</rt></ruby>へ &nbsp;
+    <kbd>←</kbd><kbd>→</kbd> <ruby>前後<rt>ぜんご</rt></ruby>に<ruby>移動<rt>いどう</rt></ruby>
+  </div>
+</div>
+
+<!-- ──────────── COMPLETE ──────────── -->
+<div id="complete" class="screen">
+  <div class="complete-card">
+    <div class="complete-emoji">🎉</div>
+    <h2>お<ruby>疲<rt>つか</rt></ruby>れさまでした！</h2>
+    <p><ruby>全<rt>すべ</rt></ruby>ての<ruby>問題<rt>もんだい</rt></ruby>を<ruby>確認<rt>かくにん</rt></ruby>しました</p>
+    <div class="btn-stack">
+      <button class="btn-pri" onclick="restart()">🔄 もう<ruby>一度<rt>いちど</rt></ruby></button>
+      <button class="btn-sec" onclick="goSetup()">← <ruby>設定<rt>せってい</rt></ruby>に<ruby>戻<rt>もど</rt></ruby>る</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Level definitions ──
+const LEVELS = [
+  { id: 'hour', label: '○<ruby>時<rt>じ</rt></ruby>のみ',                                                       minutes: [0] },
+  { id: 'half', label: '○<ruby>時<rt>じ</rt></ruby><ruby>半<rt>はん</rt></ruby>',                              minutes: [30] },
+  { id: 'min5', label: '○<ruby>時<rt>じ</rt></ruby>○<ruby>分<rt>ふん</rt></ruby>（1<ruby>分<rt>ぷん</rt></ruby><ruby>刻<rt>きざ</rt></ruby>み）', minutes: Array.from({length: 59}, (_, i) => i + 1) },
+];
+
+// ── Japanese readings ──
+const H_READ = [
+  'いちじ','にじ','さんじ','よじ','ごじ','ろくじ',
+  'しちじ','はちじ','くじ','じゅうじ','じゅういちじ','じゅうにじ'
+];
+// ── Minute reading (1–59) ──
+// Ones digits that trigger contraction + ぷん: 1,3,4,6,8; multiples of 10 also → ぷん
+const ONES_READ  = ['','いち','に','さん','よん','ご','ろく','なな','はち','きゅう'];
+const ONES_CONTR = ['','いっ', 'に','さん','よん','ご','ろっ', 'なな','はっ', 'きゅう'];
+const TENS_READ  = ['','じゅう','にじゅう','さんじゅう','よんじゅう','ごじゅう'];
+const TENS_CONTR = ['','じゅっ', 'にじゅっ', 'さんじゅっ', 'よんじゅっ', 'ごじゅっ'];
+const PUN_ONES   = new Set([1, 3, 4, 6, 8]);
+
+function minReading(m) {
+  const tens = Math.floor(m / 10);
+  const ones = m % 10;
+  if (ones === 0) return TENS_CONTR[tens] + 'ぷん';          // 10,20,30…
+  const isPun = PUN_ONES.has(ones);
+  const oStr  = isPun ? ONES_CONTR[ones] : ONES_READ[ones];
+  const sfx   = isPun ? 'ぷん' : 'ふん';
+  return (tens > 0 ? TENS_READ[tens] : '') + oStr + sfx;
+}
+
+function minFuri(m) {
+  if (m % 10 === 0) return 'ぷん';
+  return PUN_ONES.has(m % 10) ? 'ぷん' : 'ふん';
+}
+
+// ap = 'am' | 'pm' | null
+function timeReading(h, m, ap) {
+  const parts = [];
+  if (ap === 'am') parts.push('ごぜん');
+  else if (ap === 'pm') parts.push('ごご');
+  parts.push(H_READ[h - 1]);
+  if (m === 30) parts.push('はん');
+  else if (m !== 0) parts.push(minReading(m));
+  return parts.join(' '); // 半角スペースで区切る
+}
+
+function timeKanji(h, m, ap) {
+  const apHtml = ap === 'am' ? '<ruby>午前<rt>ごぜん</rt></ruby>'
+               : ap === 'pm' ? '<ruby>午後<rt>ごご</rt></ruby>'
+               : '';
+  if (m === 0)  return `${apHtml}${h}<ruby>時<rt>じ</rt></ruby>`;
+  if (m === 30) return `${apHtml}${h}<ruby>時<rt>じ</rt></ruby><ruby>半<rt>はん</rt></ruby>`;
+  return `${apHtml}${h}<ruby>時<rt>じ</rt></ruby>${m}<ruby>分<rt>${minFuri(m)}</rt></ruby>`;
+}
+
+// ── Build deck ──
+function buildAllTimes(selected, withAmPm) {
+  const seen  = new Set();
+  const times = [];
+  const apList = withAmPm ? ['am', 'pm'] : [null];
+  for (const ap of apList) {
+    for (let h = 1; h <= 12; h++) {
+      for (const lv of LEVELS) {
+        if (!selected.has(lv.id)) continue;
+        for (const m of lv.minutes) {
+          const key = `${ap}:${h}:${m}`;
+          if (!seen.has(key)) { seen.add(key); times.push({ h, m, ap }); }
+        }
+      }
+    }
+  }
+  return times;
+}
+
+// ── Clock SVG ──
+function makeClock(h, m, size) {
+  const cx = 100, cy = 100, r = 88;
+  const hAngle = ((h % 12) + m / 60) * 30;
+  const mAngle = m * 6;
+  const s = size || 200;
+
+  const pt = (angle, len) => {
+    const rad = angle * Math.PI / 180;
+    return { x: cx + len * Math.sin(rad), y: cy - len * Math.cos(rad) };
+  };
+
+  let ticks = '';
+  for (let i = 0; i < 60; i++) {
+    const a = i * 6;
+    const isBig = i % 5 === 0;
+    const outer = r - 2;
+    const inner = outer - (isBig ? 11 : 5);
+    const p1 = pt(a, outer), p2 = pt(a, inner);
+    ticks += `<line class="${isBig ? 'clock-tick-big' : 'clock-tick-sm'}"
+      x1="${p1.x.toFixed(1)}" y1="${p1.y.toFixed(1)}"
+      x2="${p2.x.toFixed(1)}" y2="${p2.y.toFixed(1)}"/>`;
+  }
+
+  const hEnd = pt(hAngle, 50);
+  const mEnd = pt(mAngle, 68);
+
+  return `<svg class="clock-svg" width="${s}" height="${s}" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+    <circle class="clock-face" cx="${cx}" cy="${cy}" r="${r + 6}"/>
+    ${ticks}
+    <line class="clock-hand-h" x1="${cx}" y1="${cy}" x2="${hEnd.x.toFixed(1)}" y2="${hEnd.y.toFixed(1)}"/>
+    <line class="clock-hand-m" x1="${cx}" y1="${cy}" x2="${mEnd.x.toFixed(1)}" y2="${mEnd.y.toFixed(1)}"/>
+    <circle class="clock-center" cx="${cx}" cy="${cy}" r="5.5"/>
+  </svg>`;
+}
+
+function makeDigital(h, m) {
+  return `<div class="digital-display">${h}:${String(m).padStart(2,'0')}</div>`;
+}
+
+function makeAmPmLabel(ap) {
+  if (!ap) return '';
+  const cls  = ap === 'am' ? 'am' : 'pm';
+  const text = ap === 'am' ? 'AM' : 'PM';
+  return `<div class="ampm-disp ${cls}">${text}</div>`;
+}
+
+// ── State ──
+let selectedLevels = new Set();
+let displayMode    = 'analog';
+let probCount      = 0;
+let deck = [], idx = 0, open = false;
+
+function getWithAmPm() {
+  return document.getElementById('use-ampm').checked;
+}
+
+// ── Init level chips ──
+(function initChips() {
+  const el = document.getElementById('level-chips');
+  LEVELS.forEach(lv => {
+    const d = document.createElement('div');
+    d.className = 'chip';
+    d.id = 'chip-' + lv.id;
+    d.innerHTML = lv.label;
+    d.onclick = () => toggleLevel(lv.id);
+    el.appendChild(d);
+  });
+})();
+
+function toggleLevel(id) {
+  if (selectedLevels.has(id)) selectedLevels.delete(id);
+  else selectedLevels.add(id);
+  refreshSetup();
+}
+
+function setMode(mode) {
+  displayMode = mode;
+  ['analog','digital','both'].forEach(m =>
+    document.getElementById('mode-' + m).classList.toggle('on', m === mode)
+  );
+}
+
+function levelLabel() {
+  const active = LEVELS.filter(lv => selectedLevels.has(lv.id));
+  if (active.length === 0) return '';
+  const strip = s => s.replace(/<[^>]+>/g, '');
+  let label = active.length <= 2
+    ? active.map(l => strip(l.label)).join('・')
+    : active.slice(0, 2).map(l => strip(l.label)).join('・') + '…';
+  if (getWithAmPm()) label += '（午前・午後）';
+  return label;
+}
+
+function refreshSetup() {
+  LEVELS.forEach(lv =>
+    document.getElementById('chip-' + lv.id).classList.toggle('on', selectedLevels.has(lv.id))
+  );
+  const avail = buildAllTimes(selectedLevels, getWithAmPm()).length;
+  document.getElementById('time-count').textContent = avail;
+  document.getElementById('selected-info').innerHTML =
+    selectedLevels.size === 0
+      ? '<ruby>種類<rt>しゅるい</rt></ruby>を<ruby>選<rt>えら</rt></ruby>んでください'
+      : `<strong>${avail}</strong> <ruby>問<rt>もん</rt></ruby>が<ruby>利用<rt>りよう</rt></ruby>できます`;
+  document.getElementById('start-btn').disabled = avail === 0;
+  refreshProbs(avail);
+}
+
+function refreshProbs(avail) {
+  if (avail === undefined) avail = buildAllTimes(selectedLevels, getWithAmPm()).length;
+  const lbl = document.getElementById('prob-label');
+  const sub = document.getElementById('prob-sub');
+  const mn  = document.getElementById('prob-minus');
+  const pl  = document.getElementById('prob-plus');
+  if (avail === 0) {
+    lbl.innerHTML = '<ruby>全<rt>すべ</rt></ruby>て';
+    sub.innerHTML = '<ruby>種類<rt>しゅるい</rt></ruby>を<ruby>選<rt>えら</rt></ruby>ぶと<ruby>設定<rt>せってい</rt></ruby>できます';
+    mn.disabled = pl.disabled = true;
+    return;
+  }
+  if (probCount === 0 || probCount >= avail) probCount = 0;
+  if (probCount === 0) {
+    lbl.innerHTML = '<ruby>全<rt>すべ</rt></ruby>て';
+    sub.innerHTML = `${avail} <ruby>問<rt>もん</rt></ruby>すべて<ruby>出題<rt>しゅつだい</rt></ruby>`;
+    mn.disabled = avail <= 1; pl.disabled = true;
+  } else {
+    lbl.innerHTML = `${probCount} <ruby>問<rt>もん</rt></ruby>`;
+    sub.innerHTML = `${avail} <ruby>問<rt>もん</rt></ruby>中 ${probCount} <ruby>問<rt>もん</rt></ruby>を<ruby>出題<rt>しゅつだい</rt></ruby>`;
+    mn.disabled = probCount <= 1;
+    pl.disabled = probCount >= avail;
+  }
+}
+
+function changeProbs(d) {
+  const avail = buildAllTimes(selectedLevels, getWithAmPm()).length;
+  if (avail === 0) return;
+  const cur = probCount === 0 ? avail : probCount;
+  const next = cur + d;
+  probCount = (next >= avail) ? 0 : Math.max(1, next);
+  refreshProbs(avail);
+}
+
+// ── Practice ──
+function startPractice() {
+  deck = buildAllTimes(selectedLevels, getWithAmPm());
+  if (document.getElementById('shuffle').checked) {
+    deck = [...deck].sort(() => Math.random() - .5);
+  }
+  if (probCount > 0 && probCount < deck.length) deck = deck.slice(0, probCount);
+  idx = 0; open = false;
+  document.getElementById('rows-badge').textContent = levelLabel();
+  document.getElementById('p-tot').textContent = deck.length;
+  show('practice');
+  render();
+}
+
+function render() {
+  const t = deck[idx];
+  const wrap = document.getElementById('clock-wrap');
+  const apLabel = makeAmPmLabel(t.ap);
+
+  if (displayMode === 'analog') {
+    wrap.innerHTML = apLabel + makeClock(t.h, t.m, 200);
+  } else if (displayMode === 'digital') {
+    wrap.innerHTML = apLabel + makeDigital(t.h, t.m);
+  } else {
+    wrap.innerHTML = apLabel +
+      `<div class="both-wrap">${makeClock(t.h, t.m, 170)}${makeDigital(t.h, t.m)}</div>`;
+  }
+
+  document.getElementById('ans-kanji').innerHTML     = timeKanji(t.h, t.m, t.ap);
+  document.getElementById('ans-reading').textContent = timeReading(t.h, t.m, t.ap);
+  document.getElementById('answer-wrap').classList.toggle('open', open);
+
+  const mb = document.getElementById('main-btn');
+  if (open) {
+    mb.innerHTML = '<ruby>次<rt>つぎ</rt></ruby>の<ruby>問題<rt>もんだい</rt></ruby> →';
+    mb.className = 'main-btn revealed';
+  } else {
+    mb.innerHTML = '<ruby>答<rt>こた</rt></ruby>えを<ruby>見<rt>み</rt></ruby>る';
+    mb.className = 'main-btn';
+  }
+
+  document.getElementById('p-cur').textContent = idx + 1;
+  const pct = ((idx + (open ? 1 : 0)) / deck.length) * 100;
+  document.getElementById('prog-fill').style.width = pct + '%';
+  document.getElementById('prev-btn').disabled = idx === 0;
+  document.getElementById('skip-btn').disabled = idx === deck.length - 1 && !open;
+}
+
+function doMain() {
+  if (!open) { open = true; render(); }
+  else { go(1); }
+}
+
+function go(dir) {
+  const next = idx + dir;
+  if (next < 0) return;
+  if (next >= deck.length) { show('complete'); return; }
+  idx = next; open = false; render();
+}
+
+function restart() {
+  if (document.getElementById('shuffle').checked) {
+    deck = [...deck].sort(() => Math.random() - .5);
+  }
+  idx = 0; open = false; show('practice'); render();
+}
+
+function goSetup() { show('setup'); }
+
+function show(name) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(name).classList.add('active');
+}
+
+document.addEventListener('keydown', e => {
+  if (!document.getElementById('practice').classList.contains('active')) return;
+  if (e.code === 'Space')           { e.preventDefault(); doMain(); }
+  else if (e.code === 'ArrowRight') { go(1); }
+  else if (e.code === 'ArrowLeft')  { go(-1); }
+});
+
+refreshSetup();
+</script>
+</body>
+</html>
